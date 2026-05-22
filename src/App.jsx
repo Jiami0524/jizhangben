@@ -4,6 +4,7 @@ import { AppProvider } from './contexts/AppContext'
 import AuthPage from './pages/AuthPage'
 import Layout from './components/Layout'
 import AddTransactionDrawer from './components/AddTransactionDrawer'
+import SummaryCards from './components/SummaryCards'
 
 function AppContent() {
   const [page, setPage] = useState('dashboard')
@@ -35,7 +36,7 @@ function AppContent() {
         {page === 'dashboard' && (
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">本月概览</h2>
-            <p className="text-gray-400">仪表盘内容即将到来...</p>
+            <SummaryCards />
           </div>
         )}
         {page === 'stats' && (
