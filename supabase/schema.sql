@@ -20,6 +20,9 @@ CREATE TABLE transactions (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 唯一约束：每个用户不能有同名同类型的分类
+ALTER TABLE categories ADD CONSTRAINT unique_category_per_user UNIQUE (name, type, user_id);
+
 -- 索引
 CREATE INDEX idx_transactions_user_date ON transactions(user_id, date DESC);
 CREATE INDEX idx_categories_user ON categories(user_id);
@@ -67,7 +70,7 @@ CREATE POLICY "Users can delete own transactions"
 CREATE OR REPLACE FUNCTION create_default_categories()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO categories (name, type, icon, user_id) VALUES
+  INSERT INTO public.categories (name, type, icon, user_id) VALUES
     ('工资', 'income', '💼', NEW.id),
     ('兼职', 'income', '💻', NEW.id),
     ('理财', 'income', '📈', NEW.id),
