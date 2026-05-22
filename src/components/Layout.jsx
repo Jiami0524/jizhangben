@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { HiOutlineHome, HiOutlineChartBar, HiOutlineLogout, HiOutlinePlus } from 'react-icons/hi'
 
