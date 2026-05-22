@@ -1,21 +1,23 @@
 import { useState, useCallback } from 'react'
+import { format, addMonths, subMonths } from 'date-fns'
+import { HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi'
 import { useAuth } from './contexts/AuthContext'
-import { AppProvider } from './contexts/AppContext'
+import { useApp } from './contexts/AppContext'
 import AuthPage from './pages/AuthPage'
+import StatsPage from './pages/StatsPage'
 import Layout from './components/Layout'
-import AddTransactionDrawer from './components/AddTransactionDrawer'
 import SummaryCards from './components/SummaryCards'
 import CategoryPieChart from './components/CategoryPieChart'
 import RecentTransactions from './components/RecentTransactions'
+import AddTransactionDrawer from './components/AddTransactionDrawer'
 
 function AppContent() {
   const [page, setPage] = useState('dashboard')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null)
+  const app = useApp()
 
-  const handleNavigate = useCallback((key) => {
-    setPage(key)
-  }, [])
+  const handleNavigate = useCallback((key) => setPage(key), [])
 
   const handleAddClick = () => {
     setEditingTransaction(null)
@@ -33,11 +35,30 @@ function AppContent() {
   }
 
   return (
-    <AppProvider>
+    <>
       <Layout activePage={page} onNavigate={handleNavigate} onAddClick={handleAddClick}>
         {page === 'dashboard' && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">本月概览</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">本月概览</h2>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => app.setCurrentMonth(subMonths(app.currentMonth, 1))}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <HiOutlineChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="text-sm font-medium text-gray-700 min-w-[100px] text-center">
+                  {format(app.currentMonth, 'yyyy 年 M 月')}
+                </span>
+                <button
+                  onClick={() => app.setCurrentMonth(addMonths(app.currentMonth, 1))}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <HiOutlineChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
             <SummaryCards />
             <div className="mt-8 glass-card p-6">
               <CategoryPieChart />
@@ -47,19 +68,14 @@ function AppContent() {
             </div>
           </div>
         )}
-        {page === 'stats' && (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">统计分析</h2>
-            <p className="text-gray-400">统计图表即将到来...</p>
-          </div>
-        )}
+        {page === 'stats' && <StatsPage />}
       </Layout>
       <AddTransactionDrawer
         open={drawerOpen}
         onClose={handleCloseDrawer}
         editTransaction={editingTransaction}
       />
-    </AppProvider>
+    </>
   )
 }
 
