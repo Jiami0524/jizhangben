@@ -1,16 +1,61 @@
 import { useState, useCallback } from 'react'
 import { useAuth } from './contexts/AuthContext'
+import { AppProvider } from './contexts/AppContext'
 import AuthPage from './pages/AuthPage'
 import Layout from './components/Layout'
+import AddTransactionDrawer from './components/AddTransactionDrawer'
 
-export default function App() {
-  const { session, loading } = useAuth()
+function AppContent() {
   const [page, setPage] = useState('dashboard')
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState(null)
 
   const handleNavigate = useCallback((key) => {
     setPage(key)
   }, [])
+
+  const handleAddClick = () => {
+    setEditingTransaction(null)
+    setDrawerOpen(true)
+  }
+
+  const handleEditTransaction = (tx) => {
+    setEditingTransaction(tx)
+    setDrawerOpen(true)
+  }
+
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false)
+    setEditingTransaction(null)
+  }
+
+  return (
+    <AppProvider>
+      <Layout activePage={page} onNavigate={handleNavigate} onAddClick={handleAddClick}>
+        {page === 'dashboard' && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">本月概览</h2>
+            <p className="text-gray-400">仪表盘内容即将到来...</p>
+          </div>
+        )}
+        {page === 'stats' && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">统计分析</h2>
+            <p className="text-gray-400">统计图表即将到来...</p>
+          </div>
+        )}
+      </Layout>
+      <AddTransactionDrawer
+        open={drawerOpen}
+        onClose={handleCloseDrawer}
+        editTransaction={editingTransaction}
+      />
+    </AppProvider>
+  )
+}
+
+export default function App() {
+  const { session, loading } = useAuth()
 
   if (loading) {
     return (
@@ -20,24 +65,7 @@ export default function App() {
     )
   }
 
-  if (!session) {
-    return <AuthPage />
-  }
+  if (!session) return <AuthPage />
 
-  return (
-    <Layout activePage={page} onNavigate={handleNavigate} onAddClick={() => setDrawerOpen(true)}>
-      {page === 'dashboard' && (
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">本月概览</h2>
-          <p className="text-gray-400">仪表盘内容即将到来...</p>
-        </div>
-      )}
-      {page === 'stats' && (
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">统计分析</h2>
-          <p className="text-gray-400">统计图表即将到来...</p>
-        </div>
-      )}
-    </Layout>
-  )
+  return <AppContent />
 }
