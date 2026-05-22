@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react'
 import { HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineX } from 'react-icons/hi'
 
 // ---- Context ----
@@ -43,10 +43,13 @@ function ToastContainer({ toasts, removeToast }) {
 
 // ---- Single Toast ----
 function ToastItem({ toast, onClose }) {
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
   useEffect(() => {
-    const timer = setTimeout(onClose, 3500)
+    const timer = setTimeout(() => onCloseRef.current(), 3500)
     return () => clearTimeout(timer)
-  }, [onClose])
+  }, [])
 
   const isSuccess = toast.type === 'success'
   const Icon = isSuccess ? HiOutlineCheckCircle : HiOutlineXCircle
