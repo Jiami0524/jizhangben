@@ -68,7 +68,6 @@ export default function CategoryPieChart() {
             nameKey="name"
             label={renderLabel}
             labelLine={false}
-            isAnimationActive={false}
           >
             {expenseByCategory.map((_, index) => (
               <Cell key={index} fill={COLORS[index % COLORS.length]} stroke="none" />
