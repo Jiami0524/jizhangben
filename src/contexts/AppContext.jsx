@@ -50,15 +50,7 @@ export function AppProvider({ children }) {
       fetchCategories()
       fetchTransactions()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session])
-
-  useEffect(() => {
-    if (session && !loading) {
-      fetchTransactions()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchTransactions])
+  }, [session, fetchTransactions])
 
   const addTransaction = async (record) => {
     const { data, error } = await supabase
