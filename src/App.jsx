@@ -60,12 +60,20 @@ function AppContent() {
               </div>
             </div>
             <SummaryCards />
-            <div className="mt-8 glass-card p-6">
-              <CategoryPieChart />
-            </div>
-            <div className="mt-8 glass-card p-6">
-              <RecentTransactions onEdit={handleEditTransaction} />
-            </div>
+            {app.loading ? (
+              <div className="flex justify-center py-16">
+                <div className="w-10 h-10 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <>
+                <div className="mt-8 glass-card p-6">
+                  <CategoryPieChart />
+                </div>
+                <div className="mt-8 glass-card p-6">
+                  <RecentTransactions onEdit={handleEditTransaction} />
+                </div>
+              </>
+            )}
           </div>
         )}
         {page === 'stats' && <StatsPage />}

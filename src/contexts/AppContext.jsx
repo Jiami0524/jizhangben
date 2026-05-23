@@ -27,6 +27,8 @@ export function AppProvider({ children }) {
 
   // Fetch transactions for current month
   const fetchTransactions = useCallback(async () => {
+    setLoading(true)
+    setTransactions([])
     const { data } = await supabase
       .from('transactions')
       .select('*, categories(name, icon)')
@@ -44,7 +46,15 @@ export function AppProvider({ children }) {
       fetchCategories()
       fetchTransactions()
     }
-  }, [session, fetchCategories, fetchTransactions])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session])
+
+  useEffect(() => {
+    if (session && !loading) {
+      fetchTransactions()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchTransactions])
 
   // Add transaction
   const addTransaction = async (record) => {
