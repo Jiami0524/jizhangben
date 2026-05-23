@@ -12,8 +12,8 @@ export function AppProvider({ children }) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [loading, setLoading] = useState(true)
 
-  const monthStart = startOfMonth(currentMonth)
-  const monthEnd = endOfMonth(currentMonth)
+  const monthStart = useMemo(() => startOfMonth(currentMonth), [currentMonth])
+  const monthEnd = useMemo(() => endOfMonth(currentMonth), [currentMonth])
 
   const enrichTransaction = useCallback((record) => {
     if (!record) return record
