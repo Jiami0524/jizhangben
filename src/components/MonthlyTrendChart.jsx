@@ -87,8 +87,8 @@ export default function MonthlyTrendChart() {
               <span className="text-sm text-gray-600">{value === 'income' ? '收入' : '支出'}</span>
             )}
           />
-          <Bar dataKey="income" name="income" fill="#22c55e" radius={[6, 6, 0, 0]} />
-          <Bar dataKey="expense" name="expense" fill="#ef4444" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="income" name="收入" fill="#22c55e" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="expense" name="支出" fill="#ef4444" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
