@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from './AuthContext'
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns'
@@ -15,30 +15,34 @@ export function AppProvider({ children }) {
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
 
-  // Fetch categories
+  const enrichTransaction = useCallback((record) => {
+    if (!record) return record
+    const cat = categories.find((c) => c.id === record.category_id)
+    return { ...record, categories: cat ? { name: cat.name, icon: cat.icon } : null }
+  }, [categories])
+
   const fetchCategories = useCallback(async () => {
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name')
+    const { data } = await supabase.from('categories').select('*').order('name')
     if (data) setCategories(data)
     return data || []
   }, [])
 
-  // Fetch transactions for current month
   const fetchTransactions = useCallback(async () => {
     setLoading(true)
     setTransactions([])
-    const { data } = await supabase
-      .from('transactions')
-      .select('*, categories(name, icon)')
-      .gte('date', format(monthStart, 'yyyy-MM-dd'))
-      .lte('date', format(monthEnd, 'yyyy-MM-dd'))
-      .order('date', { ascending: false })
-      .order('created_at', { ascending: false })
-    if (data) setTransactions(data)
-    setLoading(false)
-    return data || []
+    try {
+      const { data } = await supabase
+        .from('transactions')
+        .select('*, categories(name, icon)')
+        .gte('date', format(monthStart, 'yyyy-MM-dd'))
+        .lte('date', format(monthEnd, 'yyyy-MM-dd'))
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
+      if (data) setTransactions(data)
+      return data || []
+    } finally {
+      setLoading(false)
+    }
   }, [monthStart, monthEnd])
 
   useEffect(() => {
@@ -56,87 +60,77 @@ export function AppProvider({ children }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchTransactions])
 
-  // Add transaction
   const addTransaction = async (record) => {
     const { data, error } = await supabase
       .from('transactions')
       .insert({ ...record, user_id: session.user.id })
-      .select('*, categories(name, icon)')
+      .select()
       .single()
     if (error) throw error
-    setTransactions((prev) => [data, ...prev])
-    return data
+    const enriched = enrichTransaction(data)
+    setTransactions((prev) => [enriched, ...prev])
+    return enriched
   }
 
-  // Update transaction
   const updateTransaction = async (id, updates) => {
     const { data, error } = await supabase
       .from('transactions')
       .update(updates)
       .eq('id', id)
-      .select('*, categories(name, icon)')
+      .select()
       .single()
     if (error) throw error
-    setTransactions((prev) => prev.map((t) => (t.id === id ? data : t)))
-    return data
+    const enriched = enrichTransaction(data)
+    setTransactions((prev) => prev.map((t) => (t.id === id ? enriched : t)))
+    return enriched
   }
 
-  // Delete transaction
   const deleteTransaction = async (id) => {
     const { error } = await supabase.from('transactions').delete().eq('id', id)
     if (error) throw error
     setTransactions((prev) => prev.filter((t) => t.id !== id))
   }
 
-  // Computed values
-  const totalIncome = transactions
-    .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + Number(t.amount), 0)
+  const totalIncome = useMemo(() =>
+    transactions.filter((t) => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0),
+  [transactions])
 
-  const totalExpense = transactions
-    .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + Number(t.amount), 0)
+  const totalExpense = useMemo(() =>
+    transactions.filter((t) => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0),
+  [transactions])
 
-  const balance = totalIncome - totalExpense
+  const balance = useMemo(() => totalIncome - totalExpense, [totalIncome, totalExpense])
 
-  // Categories with amounts for charts
-  const expenseByCategory = categories
-    .filter((c) => c.type === 'expense')
-    .map((cat) => {
-      const amount = transactions
-        .filter((t) => t.type === 'expense' && t.category_id === cat.id)
-        .reduce((sum, t) => sum + Number(t.amount), 0)
-      return { ...cat, amount }
-    })
-    .filter((c) => c.amount > 0)
-    .sort((a, b) => b.amount - a.amount)
+  const expenseByCategory = useMemo(() =>
+    categories
+      .filter((c) => c.type === 'expense')
+      .map((cat) => {
+        const amount = transactions
+          .filter((t) => t.type === 'expense' && t.category_id === cat.id)
+          .reduce((sum, t) => sum + Number(t.amount), 0)
+        return { ...cat, amount }
+      })
+      .filter((c) => c.amount > 0)
+      .sort((a, b) => b.amount - a.amount),
+  [categories, transactions])
 
-  const incomeByCategory = categories
-    .filter((c) => c.type === 'income')
-    .map((cat) => {
-      const amount = transactions
-        .filter((t) => t.type === 'income' && t.category_id === cat.id)
-        .reduce((sum, t) => sum + Number(t.amount), 0)
-      return { ...cat, amount }
-    })
-    .filter((c) => c.amount > 0)
-    .sort((a, b) => b.amount - a.amount)
+  const incomeByCategory = useMemo(() =>
+    categories
+      .filter((c) => c.type === 'income')
+      .map((cat) => {
+        const amount = transactions
+          .filter((t) => t.type === 'income' && t.category_id === cat.id)
+          .reduce((sum, t) => sum + Number(t.amount), 0)
+        return { ...cat, amount }
+      })
+      .filter((c) => c.amount > 0)
+      .sort((a, b) => b.amount - a.amount),
+  [categories, transactions])
 
   const value = {
-    transactions,
-    categories,
-    currentMonth,
-    setCurrentMonth,
-    loading,
-    totalIncome,
-    totalExpense,
-    balance,
-    expenseByCategory,
-    incomeByCategory,
-    addTransaction,
-    updateTransaction,
-    deleteTransaction,
-    fetchTransactions,
+    transactions, categories, currentMonth, setCurrentMonth, loading,
+    totalIncome, totalExpense, balance, expenseByCategory, incomeByCategory,
+    addTransaction, updateTransaction, deleteTransaction, fetchTransactions,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

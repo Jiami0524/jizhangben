@@ -5,13 +5,13 @@ import { useToast } from './Toast'
 import { format } from 'date-fns'
 
 export default function AddTransactionDrawer({ open, onClose, editTransaction }) {
-  const { categories, addTransaction, updateTransaction } = useApp()
+  const { categories, addTransaction, updateTransaction, currentMonth } = useApp()
   const { addToast } = useToast()
 
   const [type, setType] = useState('expense')
   const [amount, setAmount] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [date, setDate] = useState(format(currentMonth, 'yyyy-MM-dd'))
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -29,7 +29,7 @@ export default function AddTransactionDrawer({ open, onClose, editTransaction })
       setType('expense')
       setAmount('')
       setCategoryId('')
-      setDate(format(new Date(), 'yyyy-MM-dd'))
+      setDate(format(currentMonth, 'yyyy-MM-dd'))
       setNote('')
     }
   }, [editTransaction, open])
